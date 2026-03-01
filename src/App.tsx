@@ -28,7 +28,12 @@ interface Registration {
 }
 
 export default function App() {
-  const [view, setView] = useState<'register' | 'admin-login' | 'admin-dashboard'>('register');
+  const [view, setView] = useState<'register' | 'admin-login' | 'admin-dashboard'>(() => {
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+      return 'admin-login';
+    }
+    return 'register';
+  });
   const [adminToken, setAdminToken] = useState<string | null>(localStorage.getItem('adminToken'));
 
   return (
@@ -59,24 +64,9 @@ export default function App() {
         </div>
       </div>
 
-      {/* Header / Nav */}
+      {/* Header / Nav (no visible admin toggle) */}
       <header className="relative z-20 w-full p-4 flex justify-between items-center">
         <div></div>
-        {view === 'register' ? (
-          <button
-            onClick={() => setView('admin-login')}
-            className="pixel-button px-4 py-2 flex items-center gap-2 text-xs bg-[#5a6b8c] text-white hover:-translate-y-1 transition-transform"
-          >
-            <DbIcon size={14} /> ADMIN
-          </button>
-        ) : (
-          <button
-            onClick={() => setView('register')}
-            className="pixel-button px-4 py-2 flex items-center gap-2 text-xs bg-[#535353] text-white hover:-translate-y-1 transition-transform"
-          >
-            <ArrowLeft size={14} /> BACK TO REGISTRATION
-          </button>
-        )}
       </header>
 
       <main className="relative z-10 flex flex-col items-center justify-center flex-grow p-4 md:p-8 pb-32">
@@ -236,8 +226,8 @@ function RegistrationForm() {
         </form>
       </div>
 
-      <p className="mt-8 text-center text-[10px] font-bold text-[#535353] uppercase tracking-[0.3em]">
-        &copy; 2024 PIXEL RUSH
+      <p className="mt-8 text-center text-[10px] font-bold text-[#fffbe6] uppercase tracking-[0.3em]">
+        &copy; 2026 PIXEL RUSH
       </p>
     </motion.div>
   );
