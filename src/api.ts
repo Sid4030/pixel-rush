@@ -59,10 +59,10 @@ apiRouter.post("/admin/login", (req, res) => {
 
     const validUsername = process.env.ADMIN_USERNAME || "admin";
     const validPassword = process.env.ADMIN_PASSWORD || "pixeladmin2024";
-    const apiKey = process.env.API_KEY || "fallback_api_key_123";
+    const internalToken = "pixel_rush_admin_secure_token_123";
 
     if (username === validUsername && password === validPassword) {
-        res.json({ success: true, token: apiKey });
+        res.json({ success: true, token: internalToken });
     } else {
         res.status(401).json({ error: "Invalid credentials" });
     }
@@ -71,9 +71,9 @@ apiRouter.post("/admin/login", (req, res) => {
 apiRouter.get("/registrations", async (req, res) => {
     await connectDB();
     const authHeader = req.headers.authorization;
-    const apiKey = process.env.API_KEY || "fallback_api_key_123";
+    const internalToken = "pixel_rush_admin_secure_token_123";
 
-    if (!authHeader || authHeader !== `Bearer ${apiKey}`) {
+    if (!authHeader || authHeader !== `Bearer ${internalToken}`) {
         return res.status(401).json({ error: "Unauthorized access" });
     }
 
