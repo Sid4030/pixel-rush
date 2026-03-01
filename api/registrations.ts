@@ -1,5 +1,5 @@
-import { connectDB } from "../src/lib/db";
-import { Registration } from "../src/models/Registration";
+import { connectDB } from "./_db";
+import { Registration } from "./_registration";
 
 const INTERNAL_ADMIN_TOKEN = "pixel_rush_admin_secure_token_123";
 

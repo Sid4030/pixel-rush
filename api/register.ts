@@ -1,5 +1,5 @@
-import { connectDB } from "../src/lib/db";
-import { Registration } from "../src/models/Registration";
+import { connectDB } from "./_db";
+import { Registration } from "./_registration";
 
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
