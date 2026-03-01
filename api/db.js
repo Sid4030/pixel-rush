@@ -2,14 +2,14 @@ import mongoose from "mongoose";
 
 let isConnected = false;
 
-export const connectDB = async () => {
+export async function connectDB() {
   if (isConnected) return;
 
   const mongoURI = process.env.MONGODB_URI;
 
   if (!mongoURI) {
     console.warn("MONGODB_URI not set.");
-    return;
+    throw new Error("MONGODB_URI is not configured");
   }
 
   try {
@@ -20,5 +20,5 @@ export const connectDB = async () => {
     console.error("MongoDB connection error (serverless):", err);
     throw err;
   }
-};
+}
 
