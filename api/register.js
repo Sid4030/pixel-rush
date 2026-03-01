@@ -16,20 +16,44 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { name, email, course, phone, whatsapp } = req.body || {};
+    const {
+      name,
+      email,
+      phone,
+      batch,
+      enrollmentNumber,
+      degree,
+      course,
+      instituteName,
+      participationType,
+    } = req.body || {};
 
-    if (!name || !email || !course) {
+    if (
+      !name ||
+      !email ||
+      !phone ||
+      !batch ||
+      !enrollmentNumber ||
+      !degree ||
+      !course ||
+      !instituteName ||
+      !participationType
+    ) {
       return res
         .status(400)
-        .json({ message: "Name, email, and course are required" });
+        .json({ message: "All registration fields are required" });
     }
 
     const doc = await Registration.create({
       name,
       email,
-      course,
       phone,
-      whatsapp,
+      batch,
+      enrollmentNumber,
+      degree,
+      course,
+      instituteName,
+      participationType,
     });
 
     return res

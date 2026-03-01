@@ -18,18 +18,22 @@ import {
 } from 'lucide-react';
 
 interface Registration {
-  id: number;
+  id: string;
   name: string;
   email: string;
-  course: string;
   phone: string;
-  whatsapp: string;
+  batch: string;
+  enrollmentNumber: string;
+  degree: string;
+  course: string;
+  instituteName: string;
+  participationType: string;
   created_at: string;
 }
 
 export default function App() {
   const [view, setView] = useState<'register' | 'admin-login' | 'admin-dashboard'>(() => {
-    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/meow')) {
       return 'admin-login';
     }
     return 'register';
@@ -82,9 +86,13 @@ function RegistrationForm() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    course: '',
     phone: '',
-    whatsapp: '',
+    batch: '',
+    enrollmentNumber: '',
+    degree: '',
+    course: '',
+    instituteName: '',
+    participationType: 'solo',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -100,7 +108,17 @@ function RegistrationForm() {
       });
       if (response.ok) {
         setSubmitted(true);
-        setFormData({ name: '', email: '', course: '', phone: '', whatsapp: '' });
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          batch: '',
+          enrollmentNumber: '',
+          degree: '',
+          course: '',
+          instituteName: '',
+          participationType: 'solo',
+        });
         setTimeout(() => setSubmitted(false), 3000);
       }
     } catch (error) {
@@ -163,14 +181,14 @@ function RegistrationForm() {
 
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
-              <BookOpen size={14} /> Course / Batch
+              <Phone size={14} /> Phone Number
             </label>
             <input
               required
-              type="text"
-              value={formData.course}
-              onChange={e => setFormData({ ...formData, course: e.target.value })}
-              placeholder="e.g. Computer Science 2026"
+              type="tel"
+              value={formData.phone}
+              onChange={e => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="+91 999999999"
               className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
             />
           </div>
@@ -178,29 +196,88 @@ function RegistrationForm() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
-                <Phone size={14} /> Phone Number
+                <BookOpen size={14} /> Batch
               </label>
               <input
                 required
-                type="tel"
-                value={formData.phone}
-                onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="+91 999999999"
+                type="text"
+                value={formData.batch}
+                onChange={e => setFormData({ ...formData, batch: e.target.value })}
+                placeholder="e.g. 2024-2028"
                 className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
               />
             </div>
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
-                <MessageCircle size={14} /> WhatsApp Number
+                <BookOpen size={14} /> Enrollment Number
               </label>
               <input
                 required
-                type="tel"
-                value={formData.whatsapp}
-                onChange={e => setFormData({ ...formData, whatsapp: e.target.value })}
-                placeholder="+91 999999999"
+                type="text"
+                value={formData.enrollmentNumber}
+                onChange={e => setFormData({ ...formData, enrollmentNumber: e.target.value })}
+                placeholder="e.g. ENR123456"
                 className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
+                <BookOpen size={14} /> Degree
+              </label>
+              <input
+                required
+                type="text"
+                value={formData.degree}
+                onChange={e => setFormData({ ...formData, degree: e.target.value })}
+                placeholder="e.g. B.Tech"
+                className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
+                <BookOpen size={14} /> Course
+              </label>
+              <input
+                required
+                type="text"
+                value={formData.course}
+                onChange={e => setFormData({ ...formData, course: e.target.value })}
+                placeholder="e.g. Computer Science"
+                className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
+                <BookOpen size={14} /> Institute Name
+              </label>
+              <input
+                required
+                type="text"
+                value={formData.instituteName}
+                onChange={e => setFormData({ ...formData, instituteName: e.target.value })}
+                placeholder="Your college / institute"
+                className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
+                <BookOpen size={14} /> Participation Type
+              </label>
+              <select
+                required
+                value={formData.participationType}
+                onChange={e => setFormData({ ...formData, participationType: e.target.value as 'solo' | 'duo' })}
+                className="w-full px-4 py-3 border-2 border-[#535353] bg-white focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
+              >
+                <option value="solo">Solo</option>
+                <option value="duo">Duo</option>
+              </select>
             </div>
           </div>
 
@@ -408,27 +485,37 @@ function AdminDashboard({ token, setView, setAdminToken }: { token: string, setV
             <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
                 <tr className="bg-[#535353] text-white">
-                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Name</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Full Name</th>
                   <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Email</th>
-                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Batch</th>
                   <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Phone</th>
-                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">WhatsApp</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Batch</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Enrollment #</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Degree</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Course</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Participation</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Institute</th>
                   <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Date</th>
                 </tr>
               </thead>
               <tbody>
                 {data.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-[#757575] font-bold border-2 border-[#535353]">No registrations yet.</td>
+                    <td colSpan={10} className="p-8 text-center text-[#757575] font-bold border-2 border-[#535353]">No registrations yet.</td>
                   </tr>
                 ) : (
                   data.map((row) => (
                     <tr key={row.id} className="hover:bg-gray-50 transition-colors">
                       <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.name}</td>
                       <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.email}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.phone}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.batch}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.enrollmentNumber}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.degree}</td>
                       <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.course}</td>
-                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.phone || '-'}</td>
-                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.whatsapp || '-'}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">
+                        {row.participationType === 'duo' ? 'Duo' : 'Solo'}
+                      </td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.instituteName}</td>
                       <td className="p-3 text-xs font-bold border-2 border-t-0 border-[#535353] text-[#757575]">
                         {new Date(row.created_at).toLocaleDateString()} {new Date(row.created_at).toLocaleTimeString()}
                       </td>

@@ -12,21 +12,45 @@ const INTERNAL_ADMIN_TOKEN = "pixel_rush_admin_secure_token_123";
 
 apiRouter.post("/register", async (req, res) => {
   await connectDB();
-  const { name, email, course, phone, whatsapp } = req.body;
+  const {
+    name,
+    email,
+    phone,
+    batch,
+    enrollmentNumber,
+    degree,
+    course,
+    instituteName,
+    participationType,
+  } = req.body;
 
-  if (!name || !email || !course) {
+  if (
+    !name ||
+    !email ||
+    !phone ||
+    !batch ||
+    !enrollmentNumber ||
+    !degree ||
+    !course ||
+    !instituteName ||
+    !participationType
+  ) {
     return res
       .status(400)
-      .json({ error: "Name, Email, and Course are required" });
+      .json({ error: "All registration fields are required" });
   }
 
   try {
     const newRegistration = new Registration({
       name,
       email,
-      course,
       phone,
-      whatsapp,
+      batch,
+      enrollmentNumber,
+      degree,
+      course,
+      instituteName,
+      participationType,
     });
     const savedDoc = await newRegistration.save();
     res.json({ success: true, id: savedDoc._id });

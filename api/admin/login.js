@@ -7,8 +7,8 @@ export default async function handler(req, res) {
 
   const { username, password } = req.body || {};
 
-  const validUsername = process.env.ADMIN_USERNAME || "admin";
-  const validPassword = process.env.ADMIN_PASSWORD || "pixeladmin2024";
+  const validUsername = process.env.ADMIN_USERNAME ;
+  const validPassword = process.env.ADMIN_PASSWORD ;
 
   if (username === validUsername && password === validPassword) {
     return res
