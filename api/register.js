@@ -16,44 +16,77 @@ export default async function handler(req, res) {
   }
 
   try {
-    const {
-      name,
-      email,
-      phone,
-      batch,
-      enrollmentNumber,
-      degree,
-      course,
-      instituteName,
-      participationType,
-    } = req.body || {};
+    const { teamName, participationType, sameClass, participant1, participant2, sharedClass } =
+      req.body || {};
 
-    if (
-      !name ||
-      !email ||
-      !phone ||
-      !batch ||
-      !enrollmentNumber ||
-      !degree ||
-      !course ||
-      !instituteName ||
-      !participationType
-    ) {
-      return res
-        .status(400)
-        .json({ message: "All registration fields are required" });
+    if (!teamName || !participationType || !participant1) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    if (participationType !== "solo" && participationType !== "duo") {
+      return res.status(400).json({ message: "Invalid participationType" });
+    }
+
+    const normalizeParticipant = (p, fallbackClass) => {
+      const fullName = p?.fullName ?? p?.name;
+      const base = {
+        fullName,
+        email: p?.email,
+        phone: p?.phone,
+        enrollmentNumber: p?.enrollmentNumber,
+        batch: p?.batch ?? fallbackClass?.batch,
+        degree: p?.degree ?? fallbackClass?.degree,
+        course: p?.course ?? fallbackClass?.course,
+        instituteName: p?.instituteName ?? fallbackClass?.instituteName,
+      };
+      return base;
+    };
+
+    const p1 = normalizeParticipant(participant1, sharedClass);
+    const p2 = participationType === "duo" ? normalizeParticipant(participant2, sharedClass) : null;
+
+    const isValidParticipant = (p) =>
+      p &&
+      p.fullName &&
+      p.email &&
+      p.phone &&
+      p.enrollmentNumber &&
+      p.batch &&
+      p.degree &&
+      p.course &&
+      p.instituteName;
+
+    if (!isValidParticipant(p1)) {
+      return res.status(400).json({ message: "Participant 1 is incomplete" });
+    }
+
+    if (participationType === "duo") {
+      if (!participant2) {
+        return res.status(400).json({ message: "Participant 2 is required for duo" });
+      }
+      if (sameClass) {
+        if (
+          !sharedClass ||
+          !sharedClass.batch ||
+          !sharedClass.degree ||
+          !sharedClass.course ||
+          !sharedClass.instituteName
+        ) {
+          return res.status(400).json({ message: "Shared class fields are required when sameClass is enabled" });
+        }
+      }
+      if (!isValidParticipant(p2)) {
+        return res.status(400).json({ message: "Participant 2 is incomplete" });
+      }
     }
 
     const doc = await Registration.create({
-      name,
-      email,
-      phone,
-      batch,
-      enrollmentNumber,
-      degree,
-      course,
-      instituteName,
+      teamName,
       participationType,
+      sameClass: Boolean(sameClass),
+      participant1: p1,
+      participant2: participationType === "duo" ? p2 : undefined,
+      present: false,
     });
 
     return res

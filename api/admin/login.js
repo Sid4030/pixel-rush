@@ -15,7 +15,7 @@ export default async function handler(req, res) {
       .status(200)
       .json({ success: true, token: INTERNAL_ADMIN_TOKEN });
   } else {
-    return res.status(401).json({ message: "Invalid credentials" });
+    return res.status(401).json({ error: "Invalid credentials" });
   }
 }
 

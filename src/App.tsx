@@ -17,17 +17,25 @@ import {
   RefreshCw
 } from 'lucide-react';
 
-interface Registration {
-  id: string;
-  name: string;
+interface Participant {
+  fullName: string;
   email: string;
   phone: string;
-  batch: string;
   enrollmentNumber: string;
+  batch: string;
   degree: string;
   course: string;
   instituteName: string;
-  participationType: string;
+}
+
+interface Registration {
+  id: string;
+  teamName: string;
+  participationType: 'solo' | 'duo';
+  sameClass: boolean;
+  participant1: Participant;
+  participant2?: Participant;
+  present: boolean;
   created_at: string;
 }
 
@@ -83,22 +91,53 @@ export default function App() {
 }
 
 function RegistrationForm() {
+  const [duoStep, setDuoStep] = useState<1 | 2>(1);
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    batch: '',
-    enrollmentNumber: '',
-    degree: '',
-    course: '',
-    instituteName: '',
-    participationType: 'solo',
+    teamName: '',
+    participationType: 'solo' as 'solo' | 'duo',
+    sameClass: true,
+    sharedClass: {
+      batch: '',
+      degree: '',
+      course: '',
+      instituteName: '',
+    },
+    participant1: {
+      fullName: '',
+      email: '',
+      phone: '',
+      enrollmentNumber: '',
+      batch: '',
+      degree: '',
+      course: '',
+      instituteName: '',
+    },
+    participant2: {
+      fullName: '',
+      email: '',
+      phone: '',
+      enrollmentNumber: '',
+      batch: '',
+      degree: '',
+      course: '',
+      instituteName: '',
+    },
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  useEffect(() => {
+    if (formData.participationType === 'solo') setDuoStep(1);
+  }, [formData.participationType]);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
+    if (formData.participationType === 'duo' && duoStep === 1) {
+      setDuoStep(2);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const response = await fetch('/api/register', {
@@ -109,16 +148,32 @@ function RegistrationForm() {
       if (response.ok) {
         setSubmitted(true);
         setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          batch: '',
-          enrollmentNumber: '',
-          degree: '',
-          course: '',
-          instituteName: '',
+          teamName: '',
           participationType: 'solo',
+          sameClass: true,
+          sharedClass: { batch: '', degree: '', course: '', instituteName: '' },
+          participant1: {
+            fullName: '',
+            email: '',
+            phone: '',
+            enrollmentNumber: '',
+            batch: '',
+            degree: '',
+            course: '',
+            instituteName: '',
+          },
+          participant2: {
+            fullName: '',
+            email: '',
+            phone: '',
+            enrollmentNumber: '',
+            batch: '',
+            degree: '',
+            course: '',
+            instituteName: '',
+          },
         });
+        setDuoStep(1);
         setTimeout(() => setSubmitted(false), 3000);
       }
     } catch (error) {
@@ -126,6 +181,25 @@ function RegistrationForm() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const currentKey =
+    formData.participationType === 'duo'
+      ? duoStep === 1
+        ? 'participant1'
+        : 'participant2'
+      : 'participant1';
+
+  const current = formData[currentKey];
+
+  const setCurrent = (patch: Partial<typeof current>) => {
+    setFormData({
+      ...formData,
+      [currentKey]: {
+        ...current,
+        ...patch,
+      },
+    } as any);
   };
 
   return (
@@ -153,14 +227,116 @@ function RegistrationForm() {
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
+              <Trophy size={14} /> Team Name
+            </label>
+            <input
+              required
+              type="text"
+              value={formData.teamName}
+              onChange={e => setFormData({ ...formData, teamName: e.target.value })}
+              placeholder="e.g. Pixel Warriors"
+              className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
+                <BookOpen size={14} /> Participation
+              </label>
+              <select
+                required
+                value={formData.participationType}
+                onChange={e => setFormData({ ...formData, participationType: e.target.value as 'solo' | 'duo' })}
+                className="w-full px-4 py-3 border-2 border-[#535353] bg-white focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
+              >
+                <option value="solo">Solo</option>
+                <option value="duo">Duo</option>
+              </select>
+            </div>
+
+            {formData.participationType === 'duo' && (
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
+                  <BookOpen size={14} /> Same Class
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, sameClass: !formData.sameClass })}
+                  className={`w-full pixel-button px-4 py-3 text-[10px] sm:text-xs font-black tracking-widest ${formData.sameClass ? 'bg-green-500 text-white' : 'bg-[#535353] text-white'}`}
+                >
+                  {formData.sameClass ? 'YES (FILL ONCE)' : 'NO (FILL BOTH)'}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {formData.participationType === 'duo' && formData.sameClass && (
+            <div className="bg-gray-50 border-2 border-[#535353] p-4 space-y-4">
+              <div className="text-[10px] font-black text-[#535353] uppercase tracking-widest">Shared Class Details</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-[#535353] uppercase tracking-wider block">Batch</label>
+                  <input
+                    required
+                    type="text"
+                    value={formData.sharedClass.batch}
+                    onChange={e => setFormData({ ...formData, sharedClass: { ...formData.sharedClass, batch: e.target.value } })}
+                    className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-white transition-colors font-bold text-sm"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-[#535353] uppercase tracking-wider block">Degree</label>
+                  <input
+                    required
+                    type="text"
+                    value={formData.sharedClass.degree}
+                    onChange={e => setFormData({ ...formData, sharedClass: { ...formData.sharedClass, degree: e.target.value } })}
+                    className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-white transition-colors font-bold text-sm"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-[#535353] uppercase tracking-wider block">Course</label>
+                  <input
+                    required
+                    type="text"
+                    value={formData.sharedClass.course}
+                    onChange={e => setFormData({ ...formData, sharedClass: { ...formData.sharedClass, course: e.target.value } })}
+                    className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-white transition-colors font-bold text-sm"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-[#535353] uppercase tracking-wider block">Institute Name</label>
+                  <input
+                    required
+                    type="text"
+                    value={formData.sharedClass.instituteName}
+                    onChange={e => setFormData({ ...formData, sharedClass: { ...formData.sharedClass, instituteName: e.target.value } })}
+                    className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-white transition-colors font-bold text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {formData.participationType === 'duo' && (
+            <div className="text-center text-[10px] font-black text-[#535353] uppercase tracking-[0.3em]">
+              {duoStep === 1 ? 'Participant 1' : 'Participant 2'}
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
               <User size={14} /> Full Name
             </label>
             <input
               required
               type="text"
-              value={formData.name}
-              onChange={e => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Enter your name"
+              value={current.fullName}
+              onChange={e => setCurrent({ fullName: e.target.value })}
+              placeholder="Enter full name"
               className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
             />
           </div>
@@ -172,8 +348,8 @@ function RegistrationForm() {
             <input
               required
               type="email"
-              value={formData.email}
-              onChange={e => setFormData({ ...formData, email: e.target.value })}
+              value={current.email}
+              onChange={e => setCurrent({ email: e.target.value })}
               placeholder="pixel@example.com"
               className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
             />
@@ -186,102 +362,108 @@ function RegistrationForm() {
             <input
               required
               type="tel"
-              value={formData.phone}
-              onChange={e => setFormData({ ...formData, phone: e.target.value })}
+              value={current.phone}
+              onChange={e => setCurrent({ phone: e.target.value })}
               placeholder="+91 999999999"
               className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
-                <BookOpen size={14} /> Batch
-              </label>
-              <input
-                required
-                type="text"
-                value={formData.batch}
-                onChange={e => setFormData({ ...formData, batch: e.target.value })}
-                placeholder="e.g. 2024-2028"
-                className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
-                <BookOpen size={14} /> Enrollment Number
-              </label>
-              <input
-                required
-                type="text"
-                value={formData.enrollmentNumber}
-                onChange={e => setFormData({ ...formData, enrollmentNumber: e.target.value })}
-                placeholder="e.g. ENR123456"
-                className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
-              />
-            </div>
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
+              <BookOpen size={14} /> Enrollment Number
+            </label>
+            <input
+              required
+              type="text"
+              value={current.enrollmentNumber}
+              onChange={e => setCurrent({ enrollmentNumber: e.target.value })}
+              placeholder="e.g. ENR123456"
+              className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
+            />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
-                <BookOpen size={14} /> Degree
-              </label>
-              <input
-                required
-                type="text"
-                value={formData.degree}
-                onChange={e => setFormData({ ...formData, degree: e.target.value })}
-                placeholder="e.g. B.Tech"
-                className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
-                <BookOpen size={14} /> Course
-              </label>
-              <input
-                required
-                type="text"
-                value={formData.course}
-                onChange={e => setFormData({ ...formData, course: e.target.value })}
-                placeholder="e.g. Computer Science"
-                className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
-              />
-            </div>
-          </div>
+          {(formData.participationType === 'solo' || !formData.sameClass) && (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
+                    <BookOpen size={14} /> Batch
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    value={current.batch}
+                    onChange={e => setCurrent({ batch: e.target.value })}
+                    placeholder="e.g. 2024-2028"
+                    className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
+                    <BookOpen size={14} /> Degree
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    value={current.degree}
+                    onChange={e => setCurrent({ degree: e.target.value })}
+                    placeholder="e.g. B.Tech"
+                    className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
+                  />
+                </div>
+              </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
-                <BookOpen size={14} /> Institute Name
-              </label>
-              <input
-                required
-                type="text"
-                value={formData.instituteName}
-                onChange={e => setFormData({ ...formData, instituteName: e.target.value })}
-                placeholder="Your college / institute"
-                className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
-                <BookOpen size={14} /> Participation Type
-              </label>
-              <select
-                required
-                value={formData.participationType}
-                onChange={e => setFormData({ ...formData, participationType: e.target.value as 'solo' | 'duo' })}
-                className="w-full px-4 py-3 border-2 border-[#535353] bg-white focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
+                    <BookOpen size={14} /> Course
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    value={current.course}
+                    onChange={e => setCurrent({ course: e.target.value })}
+                    placeholder="e.g. Computer Science"
+                    className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-[10px] font-black text-[#535353] uppercase tracking-wider">
+                    <BookOpen size={14} /> Institute Name
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    value={current.instituteName}
+                    onChange={e => setCurrent({ instituteName: e.target.value })}
+                    placeholder="Your college / institute"
+                    className="w-full px-4 py-3 border-2 border-[#535353] focus:outline-none focus:bg-gray-50 transition-colors font-bold text-sm"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {formData.participationType === 'duo' && (
+            <div className="flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setDuoStep(1)}
+                disabled={duoStep === 1}
+                className="pixel-button px-4 py-2 bg-[#535353] text-white text-xs disabled:opacity-50"
               >
-                <option value="solo">Solo</option>
-                <option value="duo">Duo</option>
-              </select>
+                PARTICIPANT 1
+              </button>
+              <button
+                type="button"
+                onClick={() => setDuoStep(2)}
+                className="pixel-button px-4 py-2 bg-[#5a6b8c] text-white text-xs"
+              >
+                PARTICIPANT 2
+              </button>
             </div>
-          </div>
-
-
+          )}
 
           <button
             disabled={isSubmitting}
@@ -296,14 +478,20 @@ function RegistrationForm() {
                 <Send size={20} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               )}
               <span className="tracking-widest font-black text-xs sm:text-sm">
-                {submitted ? 'SUCCESSFULLY REGISTERED!' : isSubmitting ? 'PROCESSING...' : 'SUBMIT REGISTRATION'}
+                {submitted
+                  ? 'SUCCESSFULLY REGISTERED!'
+                  : isSubmitting
+                    ? 'PROCESSING...'
+                    : formData.participationType === 'duo' && duoStep === 1
+                      ? 'NEXT: PARTICIPANT 2'
+                      : 'SUBMIT REGISTRATION'}
               </span>
             </div>
           </button>
         </form>
       </div>
 
-      <p className="mt-8 text-center text-[10px] font-bold text-[#fffbe6] uppercase tracking-[0.3em]">
+      <p className="mt-8 text-center text-[10px] font-bold text-black uppercase tracking-[0.3em]">
         &copy; 2026 PIXEL RUSH 2.0
       </p>
     </motion.div>
@@ -446,19 +634,58 @@ function AdminDashboard({ token, setView, setAdminToken }: { token: string, setV
     setView('admin-login');
   };
 
+  const handleAttendance = async (id: string, present: boolean) => {
+    try {
+      const res = await fetch('/api/attendance', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id, present }),
+      });
+
+      if (res.ok) {
+        setData(prev => prev.map(r => (r.id === id ? { ...r, present } : r)));
+      } else if (res.status === 401) {
+        setError('Unauthorized token. Please login again.');
+        handleLogout();
+      } else {
+        const json = await res.json().catch(() => ({}));
+        setError(json?.message || json?.error || 'Failed to update attendance');
+      }
+    } catch (err) {
+      setError('Failed to update attendance');
+    }
+  };
+
   const handleExport = () => {
     if (!data.length) return;
 
     const headers = [
-      'Full Name',
-      'Email',
-      'Phone',
-      'Batch',
-      'Enrollment Number',
-      'Degree',
-      'Course',
+      'Team Name',
       'Participation Type',
-      'Institute Name',
+      'Same Class',
+      'Present',
+
+      'P1 Full Name',
+      'P1 Email',
+      'P1 Phone',
+      'P1 Enrollment Number',
+      'P1 Batch',
+      'P1 Degree',
+      'P1 Course',
+      'P1 Institute Name',
+
+      'P2 Full Name',
+      'P2 Email',
+      'P2 Phone',
+      'P2 Enrollment Number',
+      'P2 Batch',
+      'P2 Degree',
+      'P2 Course',
+      'P2 Institute Name',
+
       'Registered At',
     ];
 
@@ -469,15 +696,29 @@ function AdminDashboard({ token, setView, setAdminToken }: { token: string, setV
     };
 
     const rows = data.map((row) => [
-      escapeCell(row.name),
-      escapeCell(row.email),
-      escapeCell(row.phone),
-      escapeCell(row.batch),
-      escapeCell(row.enrollmentNumber),
-      escapeCell(row.degree),
-      escapeCell(row.course),
+      escapeCell(row.teamName),
       escapeCell(row.participationType === 'duo' ? 'Duo' : 'Solo'),
-      escapeCell(row.instituteName),
+      escapeCell(row.sameClass ? 'Yes' : 'No'),
+      escapeCell(row.present ? 'Present' : 'Absent'),
+
+      escapeCell(row.participant1?.fullName),
+      escapeCell(row.participant1?.email),
+      escapeCell(row.participant1?.phone),
+      escapeCell(row.participant1?.enrollmentNumber),
+      escapeCell(row.participant1?.batch),
+      escapeCell(row.participant1?.degree),
+      escapeCell(row.participant1?.course),
+      escapeCell(row.participant1?.instituteName),
+
+      escapeCell(row.participant2?.fullName || ''),
+      escapeCell(row.participant2?.email || ''),
+      escapeCell(row.participant2?.phone || ''),
+      escapeCell(row.participant2?.enrollmentNumber || ''),
+      escapeCell(row.participant2?.batch || ''),
+      escapeCell(row.participant2?.degree || ''),
+      escapeCell(row.participant2?.course || ''),
+      escapeCell(row.participant2?.instituteName || ''),
+
       escapeCell(new Date(row.created_at).toISOString()),
     ]);
 
@@ -538,40 +779,75 @@ function AdminDashboard({ token, setView, setAdminToken }: { token: string, setV
           <div className="flex justify-center p-10"><Loader2 className="animate-spin text-[#535353]" size={32} /></div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[800px]">
+            <table className="w-full text-left border-collapse min-w-[1600px]">
               <thead>
                 <tr className="bg-[#535353] text-white">
-                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Full Name</th>
-                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Email</th>
-                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Phone</th>
-                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Batch</th>
-                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Enrollment #</th>
-                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Degree</th>
-                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Course</th>
-                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Participation</th>
-                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Institute</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Team</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Type</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Same Class</th>
+
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">P1 Name</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">P1 Email</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">P1 Phone</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">P1 Enroll</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">P1 Batch</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">P1 Degree</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">P1 Course</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">P1 Institute</th>
+
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">P2 Name</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">P2 Email</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">P2 Phone</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">P2 Enroll</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">P2 Batch</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">P2 Degree</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">P2 Course</th>
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">P2 Institute</th>
+
+                  <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Present</th>
                   <th className="p-3 text-xs font-black tracking-widest uppercase border-2 border-[#535353]">Date</th>
                 </tr>
               </thead>
               <tbody>
                 {data.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="p-8 text-center text-[#757575] font-bold border-2 border-[#535353]">No registrations yet.</td>
+                    <td colSpan={23} className="p-8 text-center text-[#757575] font-bold border-2 border-[#535353]">No registrations yet.</td>
                   </tr>
                 ) : (
                   data.map((row) => (
                     <tr key={row.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.name}</td>
-                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.email}</td>
-                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.phone}</td>
-                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.batch}</td>
-                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.enrollmentNumber}</td>
-                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.degree}</td>
-                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.course}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.teamName}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.participationType === 'duo' ? 'Duo' : 'Solo'}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.sameClass ? 'Yes' : 'No'}</td>
+
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.participant1?.fullName}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.participant1?.email}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.participant1?.phone}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.participant1?.enrollmentNumber}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.participant1?.batch}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.participant1?.degree}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.participant1?.course}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.participant1?.instituteName}</td>
+
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.participant2?.fullName || '-'}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.participant2?.email || '-'}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.participant2?.phone || '-'}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.participant2?.enrollmentNumber || '-'}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.participant2?.batch || '-'}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.participant2?.degree || '-'}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.participant2?.course || '-'}</td>
+                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.participant2?.instituteName || '-'}</td>
+
                       <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">
-                        {row.participationType === 'duo' ? 'Duo' : 'Solo'}
+                        <label className="inline-flex items-center gap-2 select-none">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(row.present)}
+                            onChange={(e) => handleAttendance(row.id, e.target.checked)}
+                          />
+                          <span className="text-xs font-black">{row.present ? 'Present' : 'Absent'}</span>
+                        </label>
                       </td>
-                      <td className="p-3 text-sm font-bold border-2 border-t-0 border-[#535353] text-[#535353]">{row.instituteName}</td>
                       <td className="p-3 text-xs font-bold border-2 border-t-0 border-[#535353] text-[#757575]">
                         {new Date(row.created_at).toLocaleDateString()} {new Date(row.created_at).toLocaleTimeString()}
                       </td>
