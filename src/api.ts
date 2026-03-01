@@ -1,91 +1,71 @@
 import express from "express";
-import mongoose from "mongoose";
-import * as dotenv from 'dotenv';
+import * as dotenv from "dotenv";
+import { connectDB } from "./lib/db";
+import { Registration } from "./models/Registration";
 
 dotenv.config();
 
 export const apiRouter = express.Router();
 apiRouter.use(express.json());
 
-const RegistrationSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true },
-    course: { type: String, required: true },
-    phone: { type: String },
-    whatsapp: { type: String },
-    created_at: { type: Date, default: Date.now }
-});
+const INTERNAL_ADMIN_TOKEN = "pixel_rush_admin_secure_token_123";
 
-const Registration = mongoose.models.Registration || mongoose.model("Registration", RegistrationSchema);
-
-let isConnected = false;
-const connectDB = async () => {
-    if (isConnected) return;
-    const mongoURI = process.env.MONGODB_URI;
-    if (!mongoURI) {
-        console.warn("MONGODB_URI not set.");
-        return;
-    }
-    try {
-        await mongoose.connect(mongoURI);
-        isConnected = true;
-        console.log("MongoDB connected.");
-    } catch (err) {
-        console.error("MongoDB conn error:", err);
-    }
-};
-
-// API Routes
 apiRouter.post("/register", async (req, res) => {
-    await connectDB();
-    const { name, email, course, phone, whatsapp } = req.body;
+  await connectDB();
+  const { name, email, course, phone, whatsapp } = req.body;
 
-    if (!name || !email || !course) {
-        return res.status(400).json({ error: "Name, Email, and Course are required" });
-    }
+  if (!name || !email || !course) {
+    return res
+      .status(400)
+      .json({ error: "Name, Email, and Course are required" });
+  }
 
-    try {
-        const newRegistration = new Registration({ name, email, course, phone, whatsapp });
-        const savedDoc = await newRegistration.save();
-        res.json({ success: true, id: savedDoc._id });
-    } catch (error) {
-        console.error("Database error:", error);
-        res.status(500).json({ error: "Failed to save registration" });
-    }
+  try {
+    const newRegistration = new Registration({
+      name,
+      email,
+      course,
+      phone,
+      whatsapp,
+    });
+    const savedDoc = await newRegistration.save();
+    res.json({ success: true, id: savedDoc._id });
+  } catch (error) {
+    console.error("Database error:", error);
+    res.status(500).json({ error: "Failed to save registration" });
+  }
 });
 
 apiRouter.post("/admin/login", (req, res) => {
-    const { username, password } = req.body;
+  const { username, password } = req.body;
 
-    const validUsername = process.env.ADMIN_USERNAME || "admin";
-    const validPassword = process.env.ADMIN_PASSWORD || "pixeladmin2024";
-    const internalToken = "pixel_rush_admin_secure_token_123";
+  const validUsername = process.env.ADMIN_USERNAME || "admin";
+  const validPassword = process.env.ADMIN_PASSWORD || "pixeladmin2024";
 
-    if (username === validUsername && password === validPassword) {
-        res.json({ success: true, token: internalToken });
-    } else {
-        res.status(401).json({ error: "Invalid credentials" });
-    }
+  if (username === validUsername && password === validPassword) {
+    res.json({ success: true, token: INTERNAL_ADMIN_TOKEN });
+  } else {
+    res.status(401).json({ error: "Invalid credentials" });
+  }
 });
 
 apiRouter.get("/registrations", async (req, res) => {
-    await connectDB();
-    const authHeader = req.headers.authorization;
-    const internalToken = "pixel_rush_admin_secure_token_123";
+  await connectDB();
+  const authHeader = req.headers.authorization;
 
-    if (!authHeader || authHeader !== `Bearer ${internalToken}`) {
-        return res.status(401).json({ error: "Unauthorized access" });
-    }
+  if (!authHeader || authHeader !== `Bearer ${INTERNAL_ADMIN_TOKEN}`) {
+    return res.status(401).json({ error: "Unauthorized access" });
+  }
 
-    try {
-        const docs = await Registration.find().sort({ created_at: -1 }).lean();
-        const mappedDocs = docs.map((doc: any) => ({
-            ...doc,
-            id: doc._id.toString(),
-        }));
-        res.json(mappedDocs);
-    } catch (error) {
-        console.error("Database error:", error);
-        res.status(500).json({ error: "Failed to fetch registrations" });
-    }
+  try {
+    const docs = await Registration.find().sort({ created_at: -1 }).lean();
+    const mappedDocs = docs.map((doc: any) => ({
+      ...doc,
+      id: doc._id.toString(),
+    }));
+    res.json(mappedDocs);
+  } catch (error) {
+    console.error("Database error:", error);
+    res.status(500).json({ error: "Failed to fetch registrations" });
+  }
 });

@@ -1,7 +1,9 @@
-import express from "express";
-import { apiRouter } from "../src/api";
+// Simple health-check endpoint for `/api/index`
+// Main API routes are implemented as separate serverless functions:
+// - `/api/register`
+// - `/api/admin/login`
+// - `/api/registrations`
 
-const app = express();
-app.use("/api", apiRouter);
-
-export default app;
+export default function handler(req: any, res: any) {
+  res.status(200).json({ ok: true, message: "Pixel Rush API index" });
+}
