@@ -1,11 +1,7 @@
-import app from "../src/index";
+import express from "express";
+import { apiRouter } from "../src/api";
 
-export const config = {
-  api: { bodyParser: false },
-};
+const app = express();
+app.use("/api", apiRouter);
 
-export const runtime = "nodejs";
-
-export default function handler(req: any, res: any) {
-  return app(req, res);
-}
+export default app;
