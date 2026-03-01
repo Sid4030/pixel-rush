@@ -304,7 +304,7 @@ function RegistrationForm() {
       </div>
 
       <p className="mt-8 text-center text-[10px] font-bold text-[#fffbe6] uppercase tracking-[0.3em]">
-        &copy; 2026 PIXEL RUSH
+        &copy; 2026 PIXEL RUSH 2.0
       </p>
     </motion.div>
   );
