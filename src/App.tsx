@@ -446,6 +446,56 @@ function AdminDashboard({ token, setView, setAdminToken }: { token: string, setV
     setView('admin-login');
   };
 
+  const handleExport = () => {
+    if (!data.length) return;
+
+    const headers = [
+      'Full Name',
+      'Email',
+      'Phone',
+      'Batch',
+      'Enrollment Number',
+      'Degree',
+      'Course',
+      'Participation Type',
+      'Institute Name',
+      'Registered At',
+    ];
+
+    const escapeCell = (value: string | number | null | undefined) => {
+      const str = value == null ? '' : String(value);
+      const escaped = str.replace(/"/g, '""');
+      return `"${escaped}"`;
+    };
+
+    const rows = data.map((row) => [
+      escapeCell(row.name),
+      escapeCell(row.email),
+      escapeCell(row.phone),
+      escapeCell(row.batch),
+      escapeCell(row.enrollmentNumber),
+      escapeCell(row.degree),
+      escapeCell(row.course),
+      escapeCell(row.participationType === 'duo' ? 'Duo' : 'Solo'),
+      escapeCell(row.instituteName),
+      escapeCell(new Date(row.created_at).toISOString()),
+    ]);
+
+    const csvContent =
+      `${headers.map(escapeCell).join(',')}\n` +
+      rows.map((r) => r.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `pixel-rush-registrations-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -460,6 +510,12 @@ function AdminDashboard({ token, setView, setAdminToken }: { token: string, setV
           </h2>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleExport}
+            className="pixel-button px-4 py-2 bg-green-500 text-white text-[10px] sm:text-xs flex items-center gap-2"
+          >
+            EXPORT TO EXCEL
+          </button>
           <button
             onClick={fetchData}
             className="pixel-button px-4 py-2 bg-yellow-400 text-[#535353] text-[10px] sm:text-xs flex items-center gap-2"
