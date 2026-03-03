@@ -14,7 +14,8 @@ import {
   MessageCircle,
   Lock,
   LogOut,
-  RefreshCw
+  RefreshCw,
+  X
 } from 'lucide-react';
 
 interface Participant {
@@ -125,6 +126,7 @@ function RegistrationForm() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [showWhatsappPopup, setShowWhatsappPopup] = useState(false);
 
   useEffect(() => {
     if (formData.participationType === 'solo') setDuoStep(1);
@@ -147,6 +149,7 @@ function RegistrationForm() {
       });
       if (response.ok) {
         setSubmitted(true);
+        setShowWhatsappPopup(true);
         setFormData({
           teamName: '',
           participationType: 'solo',
@@ -494,6 +497,82 @@ function RegistrationForm() {
       <p className="mt-8 text-center text-[10px] font-bold text-black uppercase tracking-[0.3em]">
         &copy; 2026 PIXEL RUSH 2.0
       </p>
+
+      <AnimatePresence>
+        {showWhatsappPopup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-[#f7f2e8] p-6 md:p-8 pixel-border max-w-sm w-full text-center relative shadow-2xl"
+            >
+              <button
+                type="button"
+                onClick={() => setShowWhatsappPopup(false)}
+                className="absolute top-4 right-4 text-[#535353] hover:text-black transition-colors"
+                aria-label="Close"
+              >
+                <X size={20} strokeWidth={3} />
+              </button>
+
+              <motion.div
+                animate={{
+                  y: [0, -8, 0],
+                  rotateY: [0, 0, 180, 180, 0]
+                }}
+                transition={{
+                  y: { repeat: Infinity, duration: 0.6, ease: "easeInOut" },
+                  rotateY: { repeat: Infinity, duration: 4, times: [0, 0.45, 0.5, 0.95, 1] }
+                }}
+                className="w-24 h-24 mx-auto mb-4 perspective-1000"
+              >
+                <img
+                  src="https://res.cloudinary.com/dkdvmchfi/image/upload/v1772306863/tyrannosaurus-dino-t-rex-t-rex-chrome-vr-jump-trex-runner-lava-jump-dinosaur-7a6d98d6824c2fc08c10e5a6a2d66e74_omkevp.png"
+                  alt="Dino Pixel Art"
+                  className="w-full h-full object-contain filter drop-shadow-[2px_2px_0_rgba(0,0,0,0.1)]"
+                  referrerPolicy="no-referrer"
+                />
+              </motion.div>
+
+              <div className="inline-block bg-[#5a6b8c] text-white px-3 py-1 mb-2 text-[10px] sm:text-xs font-black tracking-widest uppercase border-2 border-[#4a5a7c] shadow-[2px_2px_0_rgba(0,0,0,0.2)]">
+                LEVEL COMPLETE!
+              </div>
+
+              <h3 className="text-2xl font-black text-[#535353] tracking-tighter mb-2" style={{ textShadow: '1px 1px 0px rgba(0,0,0,0.1)' }}>
+                SUCCESS!
+              </h3>
+              <p className="text-xs font-bold text-[#535353] mb-6 uppercase tracking-wider leading-relaxed">
+                Player successfully registered. Join the WhatsApp group for your next quest updates and updates about the event!
+              </p>
+
+              <a
+                href="https://chat.whatsapp.com/L6xvAlPIzKs0Wge8ZNQ0or?mode=hq1tcla"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setShowWhatsappPopup(false)}
+                className="w-full pixel-button bg-green-500 hover:bg-green-600 text-white flex items-center justify-center gap-2 py-3 shadow-[0_4px_0_#166534] active:shadow-[0_0px_0_#166534] active:translate-y-1 transition-all"
+              >
+                <MessageCircle size={18} />
+                <span className="font-black text-[10px] sm:text-xs tracking-widest">JOIN WHATSAPP GROUP</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => setShowWhatsappPopup(false)}
+                className="text-[10px] font-black text-[#535353] mt-4 uppercase tracking-widest hover:underline"
+              >
+                Close without joining
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -504,7 +583,7 @@ function AdminLogin({ setView, setAdminToken }: { setView: (v: any) => void, set
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Auto redirect if token exists
+  
   useEffect(() => {
     if (localStorage.getItem('adminToken')) {
       setView('admin-dashboard');
