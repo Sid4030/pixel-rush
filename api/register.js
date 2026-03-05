@@ -28,16 +28,16 @@ export default async function handler(req, res) {
     }
 
     const normalizeParticipant = (p, fallbackClass) => {
-      const fullName = p?.fullName ?? p?.name;
+      const fullName = p?.fullName || p?.name;
       const base = {
         fullName,
         email: p?.email,
         phone: p?.phone,
         enrollmentNumber: p?.enrollmentNumber,
-        batch: p?.batch ?? fallbackClass?.batch,
-        degree: p?.degree ?? fallbackClass?.degree,
-        course: p?.course ?? fallbackClass?.course,
-        instituteName: p?.instituteName ?? fallbackClass?.instituteName,
+        batch: p?.batch || fallbackClass?.batch,
+        degree: p?.degree || fallbackClass?.degree,
+        course: p?.course || fallbackClass?.course,
+        instituteName: p?.instituteName || fallbackClass?.instituteName,
       };
       return base;
     };
