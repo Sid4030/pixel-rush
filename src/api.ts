@@ -37,16 +37,16 @@ apiRouter.post("/register", async (req, res) => {
 
   try {
     const normalizeParticipant = (p: any, fallbackClass: any) => {
-      const fullName = p?.fullName ?? p?.name;
+      const fullName = p?.fullName || p?.name;
       return {
         fullName,
         email: p?.email,
         phone: p?.phone,
         enrollmentNumber: p?.enrollmentNumber,
-        batch: p?.batch ?? fallbackClass?.batch,
-        degree: p?.degree ?? fallbackClass?.degree,
-        course: p?.course ?? fallbackClass?.course,
-        instituteName: p?.instituteName ?? fallbackClass?.instituteName,
+        batch: p?.batch || fallbackClass?.batch,
+        degree: p?.degree || fallbackClass?.degree,
+        course: p?.course || fallbackClass?.course,
+        instituteName: p?.instituteName || fallbackClass?.instituteName,
       };
     };
 
